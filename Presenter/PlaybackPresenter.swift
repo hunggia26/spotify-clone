@@ -115,10 +115,10 @@ final class PlaybackPresenter {
         vc.dataSource = self
         vc.delegate = self
         viewController.present(UINavigationController(rootViewController: vc), animated: true) { [weak self] in
-            self?.playerVC?.refreshUI()
-            self?.playerVC = vc
             self?.player?.play()
         }
+        self.playerVC?.refreshUI()
+        self.playerVC = vc
     }
 }
 

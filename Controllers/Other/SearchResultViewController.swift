@@ -145,7 +145,7 @@ class SearchResultViewController: UIViewController, UITableViewDelegate, UITable
             let viewModel = SearchResultSubtitleTableViewCellViewModel(
                 title: playlist.name,
                 subtitle: playlist.owner.display_name,
-                imageURL: URL(string: playlist.images.first?.url ?? "")
+                imageURL: URL(string: playlist.images?.first?.url ?? "")
             )
             cell.configure(with: viewModel)
             return cell

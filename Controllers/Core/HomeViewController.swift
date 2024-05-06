@@ -59,11 +59,60 @@ class HomeViewController: UIViewController {
         configureCollectionView()
         view.addSubview(spinner)
         fetchData()
+        addLongTapGesture()
     }
     
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
         collectionView.frame = view.bounds
+    }
+    
+    private func addLongTapGesture() {
+        let gesture = UILongPressGestureRecognizer(target: self, action: #selector(didLongPress(_:)))
+        collectionView.isUserInteractionEnabled = true
+        collectionView.addGestureRecognizer(gesture)
+    }
+    
+    @objc func didLongPress(_ gesture: UILongPressGestureRecognizer) {
+        guard gesture.state == .began else {
+            return
+        }
+        
+        let touchPoint = gesture.location(in: collectionView)
+        print("point: \(touchPoint)")
+        
+        guard let indexPath = collectionView.indexPathForItem(at: touchPoint),
+              indexPath.section == 2 else {
+            return
+        }
+        
+        let model = tracks[indexPath.row]
+        
+        let actionSheet = UIAlertController(
+            title: model.name,
+            message: "Bạn có muốn thêm nó vào danh sách không ?",
+            preferredStyle: .actionSheet
+        )
+        
+        actionSheet.addAction(UIAlertAction(title: "Huỷ", style: .cancel, handler: nil))
+        
+        actionSheet.addAction(UIAlertAction(title: "Thêm vào danh sách", style: .default, handler: { [weak self] _ in
+            DispatchQueue.main.async {
+                let vc = LibraryPlaylistsViewController()
+                vc.selectionHandler = { playlist in
+                    APICaller.shared.addTrackToPlaylist(
+                        track: model,
+                        playlist: playlist
+                    ) { success in
+                        print("Đã thêm vào danh sách thành công: \(success)")
+                    }
+                }
+                vc.title = "Chọn danh sách"
+                self?.present(UINavigationController(rootViewController: vc),
+                              animated: true, completion: nil)
+            }
+        }))
+        present(actionSheet, animated: true)
     }
     
     private func configureCollectionView() {
@@ -91,7 +140,6 @@ class HomeViewController: UIViewController {
         group.enter()
         group.enter()
         group.enter()
-        print("Start fetching data")
         
         var newReleases: NewReleasesRespone?
         var featuredPlaylist: FeaturedPlaylistsResponse?
@@ -155,9 +203,7 @@ class HomeViewController: UIViewController {
                   let playlists = featuredPlaylist?.playlists.items,
                   let tracks = recommendations?.tracks else {
                 fatalError("Models are nil")
-                return
             }
-            print("Configuring viewModels")
             self.configureModels(
                 newAlbums: newAlbums,
                 playlists: playlists,
@@ -186,7 +232,7 @@ class HomeViewController: UIViewController {
         sections.append(.featuredPlaylists(viewModels: playlists.compactMap({
             return FeaturedPlaylistCellViewModel(
                 name: $0.name,
-                artworkURL: URL(string: $0.images.first?.url ?? ""),
+                artworkURL: URL(string: $0.images?.first?.url ?? ""),
                 creatorName: $0.owner.display_name
             )
         })))
