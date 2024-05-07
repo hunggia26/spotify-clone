@@ -55,8 +55,7 @@ final class APICaller {
                     return
                 }
                 do {
-                    let result = try JSONDecoder().decode(LibraryAlbumsResponse.self, from: data)
-                    print(result)
+                    let result = try JSONDecoder().decode(LibraryAlbumsResponse.self, from: data) 
                     completion(.success(result.items.compactMap({ $0.album })))
                     
                 }
